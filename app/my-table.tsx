@@ -9,7 +9,7 @@ type ExtendedColumnDef<TData, TValue> = ColumnDef<TData, TValue> & {
   filterFn?: string
 }
 import { ArrowUpDown, MoreHorizontal, ChevronRight, ChevronDown, ArrowUp, ArrowDown } from "lucide-react"
-import { useState } from "react"
+import React, { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -510,6 +510,9 @@ const ProjectDetails = ({ row }: { row: any }) => {
 }
 
 export default function MyTable() {
+  const [mainTableColumnOrder, setMainTableColumnOrder] = React.useState<string[]>([])
+  const [subTableColumnOrder, setSubTableColumnOrder] = React.useState<string[]>([])
+
   return (
     <div className="container mx-auto py-10">
       <DataTable 
@@ -534,6 +537,8 @@ export default function MyTable() {
                 pageSize={5}
                 pageSizeOptions={[5, 10, 15, 20]}
                 fullWidth={false}
+                enableColumnReordering={true}
+                onColumnReorder={setSubTableColumnOrder}
               />
             </div>
           )
@@ -541,6 +546,8 @@ export default function MyTable() {
         filterColumn="customerEmail"
         filterPlaceholder="Filter by customer email..."
         enableColumnSearch={true}
+        enableColumnReordering={true}
+        onColumnReorder={setMainTableColumnOrder}
       />
     </div>
   )

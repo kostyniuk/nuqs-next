@@ -15,7 +15,10 @@ import {
   getExpandedRowModel,
   ExpandedState,
   ColumnResizeMode,
+  ColumnOrderState,
 } from "@tanstack/react-table"
+import { DndProvider, useDrag, useDrop } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDownIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -38,6 +41,129 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
+// Drag and drop item types
+const COLUMN_DRAG_TYPE = "column"
+
+// Drop zone indicator component - shows between columns
+const DropZoneIndicator: React.FC<{ isVisible: boolean; position: 'left' | 'right' }> = ({ isVisible, position }) => {
+  if (!isVisible) return null
+  
+  return (
+    <div className={cn(
+      "absolute top-0 bottom-0 w-1 bg-gray-500 z-50",
+      position === 'left' ? '-left-1' : '-right-1'
+    )} />
+  )
+}
+
+
+// Draggable column header component with DnD hooks
+interface DraggableColumnHeaderWithDnDProps {
+  header: any
+  index: number
+  onColumnReorder: (dragIndex: number, hoverIndex: number) => void
+  children: React.ReactNode
+}
+
+const DraggableColumnHeaderWithDnD: React.FC<DraggableColumnHeaderWithDnDProps> = ({
+  header,
+  index,
+  onColumnReorder,
+  children,
+}) => {
+  const [dragDirection, setDragDirection] = React.useState<'left' | 'right'>('right')
+
+  const [{ isDragging: isDragActive }, drag, dragPreview] = useDrag({
+    type: COLUMN_DRAG_TYPE,
+    item: { index, columnId: header.column.id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+    canDrag: () => !header.column.getIsResizing(),
+  })
+
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: COLUMN_DRAG_TYPE,
+    hover: (item: { index: number; columnId: string }, monitor) => {
+      if (!monitor.isOver({ shallow: true })) return
+      
+      const dragIndex = item.index
+      const hoverIndex = index
+      
+      if (dragIndex !== hoverIndex) {
+        // Determine direction based on drag position
+        const isDraggingFromLeft = dragIndex < hoverIndex
+        setDragDirection(isDraggingFromLeft ? 'right' : 'left')
+      }
+    },
+    drop: (item: { index: number; columnId: string }, monitor) => {
+      if (!monitor.didDrop()) {
+        const dragIndex = item.index
+        const hoverIndex = index
+
+        if (dragIndex !== hoverIndex) {
+          onColumnReorder(dragIndex, hoverIndex)
+        }
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
+    }),
+  })
+
+  const isDropTarget = isOver && canDrop
+
+  return (
+    <div
+      ref={(node) => {
+        drag(drop(node))
+        dragPreview(node)
+      }}
+      className={cn(
+        "relative flex items-center gap-2 cursor-grab active:cursor-grabbing select-none",
+        isDragActive && "opacity-50 scale-105 shadow-lg z-50",
+        !isDragActive && "hover:bg-gray-50/50 rounded transition-colors duration-150"
+      )}
+    >
+      <div className="flex-1">
+        {children}
+      </div>
+      <DropZoneIndicator isVisible={isDropTarget} position={dragDirection} />
+    </div>
+  )
+}
+
+// Wrapper component that conditionally renders drag and drop functionality
+interface DraggableColumnHeaderProps {
+  header: any
+  index: number
+  onColumnReorder: (dragIndex: number, hoverIndex: number) => void
+  children: React.ReactNode
+  enableColumnReordering?: boolean
+}
+
+const DraggableColumnHeader: React.FC<DraggableColumnHeaderProps> = ({
+  header,
+  index,
+  onColumnReorder,
+  children,
+  enableColumnReordering = true,
+}) => {
+  if (!enableColumnReordering) {
+    return <>{children}</>
+  }
+
+  return (
+    <DraggableColumnHeaderWithDnD
+      header={header}
+      index={index}
+      onColumnReorder={onColumnReorder}
+    >
+      {children}
+    </DraggableColumnHeaderWithDnD>
+  )
+}
 
 // Helper function to add expand functionality to columns
 export function addExpandColumn<TData>(
@@ -111,6 +237,8 @@ interface DataTableProps<TData, TValue> {
   pageSize?: number
   pageSizeOptions?: number[]
   fullWidth?: boolean
+  enableColumnReordering?: boolean
+  onColumnReorder?: (newColumnOrder: string[]) => void
 }
 
 type FilterType = "text" | "select" | "multi-select" | "range" | "date-range" | "none"
@@ -413,6 +541,8 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   pageSizeOptions = [10, 20, 30, 40, 50],
   fullWidth = true,
+  enableColumnReordering = false,
+  onColumnReorder,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -420,13 +550,41 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({})
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
   const [columnSizing, setColumnSizing] = React.useState({})
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(
+    columns.map((_, index) => index.toString())
+  )
 
   // Add expand column if getSubRows or renderSubComponent is provided
   const columnsWithExpand = (getSubRows || renderSubComponent) ? addExpandColumn(columns, data, getSubRows, renderSubComponent) : columns
 
+  // Handle column reordering with debouncing
+  const handleColumnReorder = React.useCallback((dragIndex: number, hoverIndex: number) => {
+    if (!enableColumnReordering) return
+
+    const newColumnOrder = [...columnOrder]
+    const draggedColumn = newColumnOrder[dragIndex]
+    newColumnOrder.splice(dragIndex, 1)
+    newColumnOrder.splice(hoverIndex, 0, draggedColumn)
+    
+    setColumnOrder(newColumnOrder)
+    onColumnReorder?.(newColumnOrder)
+  }, [enableColumnReordering, columnOrder, onColumnReorder])
+
+  // Reorder columns based on columnOrder state
+  const reorderedColumns = columnOrder.map((orderIndex) => 
+    columnsWithExpand[parseInt(orderIndex)]
+  ).filter(Boolean)
+
+  // Update column order when columns change
+  React.useEffect(() => {
+    if (columnsWithExpand.length !== columnOrder.length) {
+      setColumnOrder(columnsWithExpand.map((_, index) => index.toString()))
+    }
+  }, [columnsWithExpand.length, columnOrder.length])
+
   const table = useReactTable({
     data,
-    columns: columnsWithExpand,
+    columns: reorderedColumns,
     getSubRows,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -490,7 +648,7 @@ export function DataTable<TData, TValue>({
   const filterValue = filterColumnRef?.getFilterValue() as string ?? ""
 
 
-  return (
+  const tableContent = (
     <div className="w-full space-y-4">
       {showToolbar && (
         <div className="flex items-center justify-between">
@@ -547,7 +705,7 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, index) => {
                   const column = header.column
                   const columnDef = column.columnDef as any
                   const filterType = columnDef.filterType as FilterType || "none"
@@ -559,23 +717,30 @@ export function DataTable<TData, TValue>({
                       className="p-3 bg-gray-50/50 h-28 relative text-left"
                       style={{ width: header.getSize() }}
                     >
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-center font-medium text-gray-900 mb-2 h-6">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                      <DraggableColumnHeader
+                        header={header}
+                        index={index}
+                        onColumnReorder={handleColumnReorder}
+                        enableColumnReordering={enableColumnReordering}
+                      >
+                        <div className="flex flex-col h-full">
+                          <div className="flex items-center font-medium text-gray-900 mb-2 h-6">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </div>
+                          <div className="flex-1 flex items-start min-h-0">
+                            {enableColumnSearch && filterType !== "none" ? (
+                              renderFilter(column, filterType, filterOptions)
+                            ) : (
+                              <div className="h-6" />
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 flex items-start min-h-0">
-                          {enableColumnSearch && filterType !== "none" ? (
-                            renderFilter(column, filterType, filterOptions)
-                          ) : (
-                            <div className="h-6" />
-                          )}
-                        </div>
-                      </div>
+                      </DraggableColumnHeader>
                       {header.column.getCanResize() && (
                         <div
                           onMouseDown={header.getResizeHandler()}
@@ -719,4 +884,14 @@ export function DataTable<TData, TValue>({
       )}
     </div>
   )
+
+  if (enableColumnReordering) {
+    return (
+      <DndProvider backend={HTML5Backend}>
+        {tableContent}
+      </DndProvider>
+    )
+  }
+
+  return tableContent
 }
