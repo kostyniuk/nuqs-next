@@ -210,15 +210,15 @@ const MultiSelectFilter = ({ column, options }: { column: any; options: FilterOp
   }
 
   return (
-    <div className="space-y-1 max-h-16 overflow-hidden">
+    <div className="w-full">
       {selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-1 max-h-8 overflow-y-auto">
+        <div className="flex flex-wrap gap-1 mb-1 max-h-12 overflow-y-auto">
           {selectedValues.map((value) => {
             const option = options.find(opt => opt.value === value)
             return (
               <span
                 key={value}
-                className="px-1 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full cursor-pointer hover:bg-blue-200"
+                className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full cursor-pointer hover:bg-blue-200 whitespace-nowrap"
                 onClick={() => toggleValue(value)}
               >
                 {option?.label || value} ×
@@ -227,7 +227,7 @@ const MultiSelectFilter = ({ column, options }: { column: any; options: FilterOp
           })}
         </div>
       )}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 w-full">
         <Select
           value=""
           onValueChange={(value: string) => {
@@ -236,7 +236,7 @@ const MultiSelectFilter = ({ column, options }: { column: any; options: FilterOp
             }
           }}
         >
-          <SelectTrigger className="h-6 text-xs bg-white/80 border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all duration-200 shadow-sm flex-1">
+          <SelectTrigger className="h-7 text-xs bg-white/80 border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-all duration-200 shadow-sm flex-1 min-w-0">
             <SelectValue placeholder="Add filter..." />
           </SelectTrigger>
           <SelectContent>
@@ -252,7 +252,7 @@ const MultiSelectFilter = ({ column, options }: { column: any; options: FilterOp
         {selectedValues.length > 0 && (
           <button
             onClick={resetFilter}
-            className="h-6 w-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+            className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
             title="Clear all filters"
           >
             ×
@@ -461,12 +461,18 @@ export function DataTable<TData, TValue>({
         return true
       },
       multiSelect: (row, columnId, value) => {
-        const cellValue = row.getValue(columnId) as string[]
+        const cellValue = row.getValue(columnId)
         const selectedValues = value as string[]
         
         if (!selectedValues || selectedValues.length === 0) return true
-        if (!cellValue || !Array.isArray(cellValue)) return false
-        return selectedValues.some(val => cellValue.includes(val))
+        
+        // Handle both array and single value cases
+        if (Array.isArray(cellValue)) {
+          return selectedValues.some(val => cellValue.includes(val))
+        } else {
+          // For single values (like ticket status), check if the cell value is in selected values
+          return selectedValues.includes(cellValue as string)
+        }
       },
     },
     state: {
@@ -550,7 +556,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="p-3 bg-gray-50/50 h-24 relative text-left"
+                      className="p-3 bg-gray-50/50 h-28 relative text-left"
                       style={{ width: header.getSize() }}
                     >
                       <div className="flex flex-col h-full">

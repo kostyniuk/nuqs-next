@@ -370,7 +370,8 @@ export const columns: any[] = [
         </span>
       )
     },
-    filterType: "select",
+    filterType: "multi-select",
+    filterFn: "multiSelect" as any,
     filterOptions: [
       { value: "draft", label: "Draft" },
       { value: "pending", label: "Pending" },
@@ -379,9 +380,9 @@ export const columns: any[] = [
       { value: "completed", label: "Completed" },
       { value: "cancelled", label: "Cancelled" },
     ],
-    size: 180,
-    minSize: 150,
-    maxSize: 250,
+    size: 300,
+    minSize: 250,
+    maxSize: 400,
     enableResizing: true,
   },
   {
