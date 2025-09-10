@@ -90,6 +90,9 @@ export function addExpandColumn<TData>(
     },
     enableSorting: false,
     enableHiding: false,
+    size: 50,
+    minSize: 50,
+    maxSize: 100,
   }
 
   return [expandColumn, ...columns]
@@ -105,6 +108,9 @@ interface DataTableProps<TData, TValue> {
   enableColumnSearch?: boolean
   showToolbar?: boolean
   showPagination?: boolean
+  pageSize?: number
+  pageSizeOptions?: number[]
+  fullWidth?: boolean
 }
 
 type FilterType = "text" | "select" | "multi-select" | "range" | "date-range" | "none"
@@ -404,6 +410,9 @@ export function DataTable<TData, TValue>({
   enableColumnSearch = false,
   showToolbar = true,
   showPagination = true,
+  pageSize = 10,
+  pageSizeOptions = [10, 20, 30, 40, 50],
+  fullWidth = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -431,6 +440,11 @@ export function DataTable<TData, TValue>({
     onExpandedChange: setExpanded,
     onColumnSizingChange: setColumnSizing,
     columnResizeMode: 'onChange' as ColumnResizeMode,
+    initialState: {
+      pagination: {
+        pageSize: pageSize,
+      },
+    },
     filterFns: {
       range: (row, columnId, value) => {
         const cellValue = row.getValue(columnId) as number
@@ -494,7 +508,7 @@ export function DataTable<TData, TValue>({
                 className="ml-auto hidden h-8 lg:flex"
               >
                 <ChevronDown className="mr-2 h-4 w-4" />
-                View
+                Columns
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[150px]">
@@ -520,7 +534,10 @@ export function DataTable<TData, TValue>({
         </div>
       )}
       <div className="rounded-md border overflow-x-auto">
-        <Table style={{ width: table.getCenterTotalSize(), minWidth: '100%' }}>
+        <Table style={{ 
+          width: table.getCenterTotalSize(), 
+          minWidth: fullWidth ? '100%' : 'auto' 
+        }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -619,8 +636,16 @@ export function DataTable<TData, TValue>({
       {showPagination && (
         <div className="flex items-center justify-between space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+            {table.getFilteredSelectedRowModel().rows.length > 0 ? (
+              <span className="font-medium text-blue-600">
+                {table.getFilteredSelectedRowModel().rows.length} of{" "}
+                {table.getFilteredRowModel().rows.length} row(s) selected
+              </span>
+            ) : (
+              <span>
+                {table.getFilteredRowModel().rows.length} row(s) total
+              </span>
+            )}
           </div>
           <div className="flex items-center space-x-6 lg:space-x-8">
             <div className="flex items-center space-x-2">
@@ -632,9 +657,9 @@ export function DataTable<TData, TValue>({
                 }}
                 className="h-8 w-[70px] rounded border border-input bg-background px-3 py-1 text-sm"
               >
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <option key={pageSize} value={pageSize}>
-                    {pageSize}
+                {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
                   </option>
                 ))}
               </select>

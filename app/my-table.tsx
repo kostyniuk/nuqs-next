@@ -22,121 +22,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { DataTable } from "@/components/ui/data-table"
+import { generatedData, type Payment, type SubPayment } from "@/lib/data-generator"
 
-export type Payment = {
-  id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
-  category: "subscription" | "one-time" | "refund" | "fee"
-  priority?: "low" | "medium" | "high" | "urgent"
-  tags?: string[]
-  createdAt?: string
-  dueDate?: string
-  subPayments?: SubPayment[]
-}
 
-export type SubPayment = {
-  id: string
-  description: string
-  amount: number
-  date: string
-  category: string
-}
-
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
-    category: "subscription",
-    priority: "medium",
-    tags: ["premium", "monthly"],
-    createdAt: "2024-01-15",
-    dueDate: "2024-02-15",
-    subPayments: [
-      { id: "sub1", description: "Service Fee", amount: 50, date: "2024-01-15", category: "Service" },
-      { id: "sub2", description: "Processing Fee", amount: 20, date: "2024-01-15", category: "Fee" },
-      { id: "sub3", description: "Tax", amount: 30, date: "2024-01-15", category: "Tax" }
-    ]
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
-    category: "one-time",
-    priority: "low",
-    tags: ["setup", "onboarding"],
-    createdAt: "2024-01-20",
-    dueDate: "2024-01-25",
-    subPayments: [
-      { id: "sub4", description: "Subscription", amount: 200, date: "2024-01-20", category: "Subscription" },
-      { id: "sub5", description: "Setup Fee", amount: 42, date: "2024-01-20", category: "Setup" }
-    ]
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
-    category: "subscription",
-    priority: "high",
-    tags: ["enterprise", "annual"],
-    createdAt: "2024-01-25",
-    dueDate: "2024-02-25",
-    subPayments: [
-      { id: "sub6", description: "Monthly Plan", amount: 500, date: "2024-01-25", category: "Plan" },
-      { id: "sub7", description: "Add-ons", amount: 200, date: "2024-01-25", category: "Add-on" },
-      { id: "sub8", description: "Support", amount: 137, date: "2024-01-25", category: "Support" }
-    ]
-  },
-  {
-    id: "5kme53r4",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
-    category: "fee",
-    priority: "medium",
-    tags: ["transaction", "processing"],
-    createdAt: "2024-01-10",
-    dueDate: "2024-01-15",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
-    category: "refund",
-    priority: "urgent",
-    tags: ["refund", "dispute"],
-    createdAt: "2024-01-05",
-    dueDate: "2024-01-10",
-  },
-  {
-    id: "abc123de",
-    amount: 150,
-    status: "pending",
-    email: "john.doe@example.com",
-    category: "one-time",
-    priority: "low",
-    tags: ["trial", "conversion"],
-    createdAt: "2024-01-30",
-    dueDate: "2024-02-05",
-  },
-  {
-    id: "xyz789fg",
-    amount: 2500,
-    status: "success",
-    email: "enterprise@company.com",
-    category: "subscription",
-    priority: "high",
-    tags: ["enterprise", "annual", "premium"],
-    createdAt: "2024-01-12",
-    dueDate: "2024-02-12",
-  },
-]
+// Use generated data with 1000 rows
+const data: Payment[] = generatedData
 
 // Sub-columns for nested table
 export const subColumns: (ColumnDef<SubPayment> & {
@@ -144,6 +34,33 @@ export const subColumns: (ColumnDef<SubPayment> & {
   filterOptions?: { value: string; label: string }[]
   filterFn?: string
 })[] = [
+  {
+    id: "select",
+    header: ({ table }: { table: any }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all sub-payments"
+      />
+    ),
+    cell: ({ row }: { row: any }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select sub-payment"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+    enableResizing: true,
+    size: 50,
+    minSize: 50,
+    maxSize: 100,
+    filterType: "none",
+  },
   {
     accessorKey: "description",
     header: "Description",
@@ -204,6 +121,41 @@ export const subColumns: (ColumnDef<SubPayment> & {
       { value: "Add-on", label: "Add-on" },
       { value: "Support", label: "Support" },
     ],
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    enableResizing: true,
+    cell: ({ row }: { row: any }) => {
+      const subPayment = row.original
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Sub-payment Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(subPayment.id)}
+            >
+              Copy sub-payment ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>View details</DropdownMenuItem>
+            <DropdownMenuItem>Edit sub-payment</DropdownMenuItem>
+            <DropdownMenuItem>Delete sub-payment</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+    filterType: "none",
+    size: 50,
+    minSize: 50,
+    maxSize: 100,
   },
 ]
 
@@ -500,19 +452,29 @@ export default function MyTable() {
       <DataTable 
         columns={columns} 
         data={data} 
-        renderSubComponent={({ row }) => (
-          <div className="w-fit">
-            <DataTable
-              columns={subColumns}
-              data={(row.original?.subPayments as SubPayment[] | undefined) ?? []}
-              showToolbar={false}
-              showPagination={false}
-              enableColumnSearch={true}
-              filterColumn="description"
-              filterPlaceholder="Filter sub-payments..."
-            />
-          </div>
-        )}
+        renderSubComponent={({ row }) => {
+          const subPayments = (row.original?.subPayments as SubPayment[] | undefined) ?? []
+          
+          return (
+            <div className="w-fit">
+              <div className="mb-2 text-sm text-muted-foreground">
+                Sub-payments ({subPayments.length} items)
+              </div>
+              <DataTable
+                columns={subColumns}
+                data={subPayments}
+                showToolbar={false}
+                showPagination={true}
+                enableColumnSearch={true}
+                filterColumn="description"
+                filterPlaceholder="Filter sub-payments..."
+                pageSize={5}
+                pageSizeOptions={[5, 10, 15, 20]}
+                fullWidth={false}
+              />
+            </div>
+          )
+        }}
         filterColumn="email"
         filterPlaceholder="Filter by email..."
         enableColumnSearch={true}
