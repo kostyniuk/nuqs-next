@@ -73,7 +73,7 @@ const DraggableColumnHeaderWithDnD: React.FC<DraggableColumnHeaderWithDnDProps> 
 }) => {
   const [dragDirection, setDragDirection] = React.useState<'left' | 'right'>('right')
 
-  const [{ isDragging: isDragActive }, drag, dragPreview] = useDrag({
+  const [{ isDragging: isDragActive }, drag] = useDrag({
     type: COLUMN_DRAG_TYPE,
     item: { index, columnId: header.column.id },
     collect: (monitor) => ({
@@ -82,7 +82,7 @@ const DraggableColumnHeaderWithDnD: React.FC<DraggableColumnHeaderWithDnDProps> 
     canDrag: () => !header.column.getIsResizing(),
   })
 
-  const [{ isOver, canDrop }, drop] = useDrop({
+  const [{ isOver }, drop] = useDrop({
     accept: COLUMN_DRAG_TYPE,
     hover: (item: { index: number; columnId: string }, monitor) => {
       if (!monitor.isOver({ shallow: true })) return
@@ -108,17 +108,15 @@ const DraggableColumnHeaderWithDnD: React.FC<DraggableColumnHeaderWithDnDProps> 
     },
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
     }),
   })
 
-  const isDropTarget = isOver && canDrop
+  const isDropTarget = isOver
 
   return (
     <div
       ref={(node) => {
         drag(drop(node))
-        dragPreview(node)
       }}
       className={cn(
         "relative flex items-center gap-2 cursor-grab active:cursor-grabbing select-none",
