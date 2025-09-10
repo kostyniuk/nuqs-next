@@ -135,14 +135,7 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "boundingBox",
-    header: ({ column }: { column: any }) => (
-      <SortableHeader 
-        column={column} 
-        title="Bounding Box" 
-        canSort={false} 
-        reason="Complex object"
-      />
-    ),
+    header: "Bounding Box",
     cell: ({ row }) => {
       const box = row.original?.boundingBox
       if (!box) return <div>N/A</div>
@@ -585,56 +578,6 @@ export const columns: any[] = [
     maxSize: 100,
   },
 ]
-
-const ProjectDetails = ({ row }: { row: any }) => {
-  const project = row.original as Project
-  
-  return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-muted-foreground">Project Details</h4>
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <span className="font-medium">Project ID:</span> {project.id}
-        </div>
-        <div>
-          <span className="font-medium">Status:</span> 
-          <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-            project.ticketStatus === 'completed' ? 'bg-green-100 text-green-800' :
-            project.ticketStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-            project.ticketStatus === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-            project.ticketStatus === 'review' ? 'bg-purple-100 text-purple-800' :
-            project.ticketStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {project.ticketStatus.replace('_', ' ')}
-          </span>
-        </div>
-        <div>
-          <span className="font-medium">Customer:</span> {project.customerName}
-        </div>
-        <div>
-          <span className="font-medium">Email:</span> {project.customerEmail}
-        </div>
-        <div>
-          <span className="font-medium">Gross Price:</span> 
-          {new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(project.grossPrice)}
-        </div>
-        <div>
-          <span className="font-medium">Net Price:</span> 
-          <span className="text-green-600 font-medium">
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(project.netPrice)}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function MyTable() {
   const [mainTableColumnOrder, setMainTableColumnOrder] = React.useState<string[]>([])
