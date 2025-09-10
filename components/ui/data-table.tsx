@@ -172,11 +172,13 @@ function SortableSubTable({
 export function addExpandColumn<TData>(
   columns: ColumnDef<TData, any>[],
   data: TData[],
-  getSubRows?: (row: TData) => TData[] | undefined
+  getSubRows?: (row: TData) => TData[] | undefined,
+  renderSubComponent?: (props: { row: any }) => React.ReactElement
 ): ColumnDef<TData, any>[] {
   const hasSubRows = getSubRows && data.some(row => getSubRows(row) && getSubRows(row)!.length > 0)
+  const hasRenderSubComponent = !!renderSubComponent
   
-  if (!hasSubRows) return columns
+  if (!hasSubRows && !hasRenderSubComponent) return columns
 
   // Add expand button as the first column
   const expandColumn: ColumnDef<TData, any> = {
@@ -194,7 +196,8 @@ export function addExpandColumn<TData>(
     cell: ({ row }) => {
       const hasSubRows = getSubRows?.(row.original) && getSubRows(row.original)!.length > 0
       
-      if (!hasSubRows) {
+      // If we have renderSubComponent but no getSubRows, always show expand button
+      if (!hasSubRows && !hasRenderSubComponent) {
         return <div className="w-8" />
       }
 
@@ -543,8 +546,8 @@ export function DataTable<TData, TValue>({
   const [subTableSorting, setSubTableSorting] = React.useState<{ [rowId: string]: { column: string; direction: 'asc' | 'desc' } }>({})
   const [columnSizing, setColumnSizing] = React.useState({})
 
-  // Add expand column if getSubRows is provided
-  const columnsWithExpand = getSubRows ? addExpandColumn(columns, data, getSubRows) : columns
+  // Add expand column if getSubRows or renderSubComponent is provided
+  const columnsWithExpand = (getSubRows || renderSubComponent) ? addExpandColumn(columns, data, getSubRows, renderSubComponent) : columns
 
   const table = useReactTable({
     data,

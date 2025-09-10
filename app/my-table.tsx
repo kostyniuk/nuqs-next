@@ -488,7 +488,6 @@ export default function MyTable() {
       <DataTable 
         columns={columns} 
         data={data} 
-        getSubRows={(row) => row.subPayments}
         renderSubComponent={({ row }) => (
           <div className="w-fit">
             <DataTable
