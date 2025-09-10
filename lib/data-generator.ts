@@ -1,120 +1,118 @@
 import { faker } from '@faker-js/faker'
 
-export type Payment = {
+export type Project = {
   id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
-  category: "subscription" | "one-time" | "refund" | "fee"
-  priority?: "low" | "medium" | "high" | "urgent"
-  tags?: string[]
+  customerEmail: string
+  customerName: string
+  grossPrice: number
+  netPrice: number
+  deliveryMethod: "standard" | "express" | "overnight" | "pickup"
+  paymentMethod: "credit_card" | "bank_transfer" | "paypal" | "crypto" | "invoice"
+  ticketStatus: "draft" | "pending" | "in_progress" | "review" | "completed" | "cancelled"
   createdAt?: string
   dueDate?: string
-  subPayments?: SubPayment[]
+  parts?: Part[]
 }
 
-export type SubPayment = {
+export type Part = {
   id: string
-  description: string
-  amount: number
-  date: string
-  category: string
+  modelName: string
+  volume: number
+  boundingBox: {
+    width: number
+    height: number
+    depth: number
+  }
+  shippingDeadline: string
+  quantity: number
 }
 
-// Payment statuses with realistic distribution
-const paymentStatuses: Payment['status'][] = ['success', 'success', 'success', 'pending', 'processing', 'failed']
-const paymentCategories: Payment['category'][] = ['subscription', 'one-time', 'one-time', 'one-time', 'refund', 'fee']
-const priorities: Payment['priority'][] = ['low', 'low', 'medium', 'medium', 'high', 'urgent']
+// Project statuses with realistic distribution
+const ticketStatuses: Project['ticketStatus'][] = ['completed', 'completed', 'in_progress', 'pending', 'review', 'draft', 'cancelled']
+const deliveryMethods: Project['deliveryMethod'][] = ['standard', 'standard', 'express', 'overnight', 'pickup']
+const paymentMethods: Project['paymentMethod'][] = ['credit_card', 'credit_card', 'bank_transfer', 'paypal', 'crypto', 'invoice']
 
-// Sub-payment categories
-const subPaymentCategories = [
-  'Service Fee', 'Processing Fee', 'Tax', 'Subscription', 'Setup Fee', 
-  'Monthly Plan', 'Add-ons', 'Support', 'Maintenance', 'License',
-  'API Usage', 'Storage', 'Bandwidth', 'Premium Features', 'Analytics',
-  'Backup', 'Security', 'Compliance', 'Training', 'Consulting'
+// 3D model file extensions and naming patterns
+const modelExtensions = ['stl', 'step', 'obj', 'ply', '3mf']
+const modelNamePrefixes = [
+  'Box', 'Cylinder', 'Sphere', 'Pyramid', 'Cone', 'Torus', 'Gear', 'Bracket',
+  'Housing', 'Cover', 'Base', 'Mount', 'Adapter', 'Connector', 'Frame',
+  'Panel', 'Block', 'Disk', 'Ring', 'Tube', 'Rod', 'Plate', 'Beam'
+]
+const modelNameSuffixes = [
+  '1mm', '2mm', '5mm', '10mm', '20mm', '50mm', '100mm', '200mm',
+  'v1', 'v2', 'v3', 'final', 'draft', 'prototype', 'production'
 ]
 
-// Common tags
-const commonTags = [
-  'premium', 'monthly', 'annual', 'enterprise', 'startup', 'trial',
-  'conversion', 'upgrade', 'downgrade', 'migration', 'onboarding',
-  'setup', 'maintenance', 'support', 'api', 'integration', 'custom'
-]
-
-function generateSubPayments(paymentId: string, mainAmount: number): SubPayment[] {
-  const subPayments: SubPayment[] = []
-  const numSubPayments = faker.number.int({ min: 3, max: 8 })
+function generateParts(projectId: string): Part[] {
+  const parts: Part[] = []
+  const numParts = faker.number.int({ min: 2, max: 8 })
   
-  // Ensure sub-payments don't exceed main amount
-  let remainingAmount = mainAmount
-  const baseAmount = Math.floor(remainingAmount / numSubPayments)
-  
-  for (let i = 0; i < numSubPayments; i++) {
-    const isLast = i === numSubPayments - 1
-    const amount = isLast ? remainingAmount : faker.number.int({ 
-      min: Math.floor(baseAmount * 0.3), 
-      max: Math.floor(baseAmount * 1.5) 
-    })
+  for (let i = 0; i < numParts; i++) {
+    const prefix = faker.helpers.arrayElement(modelNamePrefixes)
+    const suffix = faker.helpers.arrayElement(modelNameSuffixes)
+    const extension = faker.helpers.arrayElement(modelExtensions)
     
-    remainingAmount -= amount
-    
-    subPayments.push({
-      id: `${paymentId}-sub-${i + 1}`,
-      description: faker.helpers.arrayElement(subPaymentCategories),
-      amount: Math.max(amount, 1), // Ensure positive amount
-      date: faker.date.recent({ days: 30 }).toISOString().split('T')[0],
-      category: faker.helpers.arrayElement(subPaymentCategories)
+    parts.push({
+      id: `${projectId}-${i + 1}`,
+      modelName: `${suffix}_${prefix}.${extension}`,
+      volume: faker.number.float({ min: 0.1, max: 1000, fractionDigits: 2 }),
+      boundingBox: {
+        width: faker.number.float({ min: 1, max: 500, fractionDigits: 1 }),
+        height: faker.number.float({ min: 1, max: 500, fractionDigits: 1 }),
+        depth: faker.number.float({ min: 1, max: 500, fractionDigits: 1 })
+      },
+      shippingDeadline: faker.date.future({ years: 1 }).toISOString().split('T')[0],
+      quantity: faker.number.int({ min: 1, max: 50 })
     })
   }
   
-  return subPayments
+  return parts
 }
 
-function generateTags(): string[] {
-  const numTags = faker.number.int({ min: 0, max: 4 })
-  return faker.helpers.arrayElements(commonTags, numTags)
-}
-
-function generatePayment(id: string): Payment {
-  const amount = faker.number.int({ min: 50, max: 5000 })
-  const status = faker.helpers.arrayElement(paymentStatuses)
-  const category = faker.helpers.arrayElement(paymentCategories)
-  const priority = faker.helpers.arrayElement(priorities)
+function generateProject(projectNumber: number): Project {
+  const grossPrice = faker.number.int({ min: 100, max: 10000 })
+  const netPrice = Math.floor(grossPrice * faker.number.float({ min: 0.8, max: 0.95, fractionDigits: 2 }))
+  const ticketStatus = faker.helpers.arrayElement(ticketStatuses)
+  const deliveryMethod = faker.helpers.arrayElement(deliveryMethods)
+  const paymentMethod = faker.helpers.arrayElement(paymentMethods)
   const createdAt = faker.date.recent({ days: 90 })
   const dueDate = faker.date.future({ years: 1 })
   
-  const payment: Payment = {
-    id,
-    amount,
-    status,
-    email: faker.internet.email(),
-    category,
-    priority,
-    tags: generateTags(),
+  const projectId = `PROJECT-${projectNumber.toString().padStart(5, '0')}`
+  
+  const project: Project = {
+    id: projectId,
+    customerEmail: faker.internet.email(),
+    customerName: faker.person.fullName(),
+    grossPrice,
+    netPrice,
+    deliveryMethod,
+    paymentMethod,
+    ticketStatus,
     createdAt: createdAt.toISOString().split('T')[0],
     dueDate: dueDate.toISOString().split('T')[0],
-    subPayments: generateSubPayments(id, amount)
+    parts: generateParts(projectId)
   }
   
-  return payment
+  return project
 }
 
-export function generatePaymentData(count: number = 1000): Payment[] {
-  const payments: Payment[] = []
+export function generateProjectData(count: number = 1000): Project[] {
+  const projects: Project[] = []
   
   // Set seed for consistent data generation
   faker.seed(12345)
   
   for (let i = 0; i < count; i++) {
-    const paymentId = faker.string.alphanumeric(8)
-    payments.push(generatePayment(paymentId))
+    projects.push(generateProject(i + 1))
   }
   
-  return payments
+  return projects
 }
 
 // Generate the data with 1000 rows
-export const generatedData = generatePaymentData(1000)
+export const generatedData = generateProjectData(1000)
 
 // Log data generation info
-console.log(`Generated ${generatedData.length} payments with ${generatedData.reduce((total, payment) => total + (payment.subPayments?.length || 0), 0)} total sub-payments`)
+console.log(`Generated ${generatedData.length} projects with ${generatedData.reduce((total, project) => total + (project.parts?.length || 0), 0)} total parts`)
