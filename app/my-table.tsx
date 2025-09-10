@@ -28,6 +28,42 @@ import { generatedData, type Project, type Part } from "@/lib/data-generator"
 // Use generated data with 1000 rows
 const data: Project[] = generatedData
 
+// Reusable sorting header component
+const SortableHeader: React.FC<{ 
+  column: any, 
+  title: string, 
+  canSort: boolean, 
+  reason?: string 
+}> = ({ column, title, canSort, reason }) => {
+  if (!canSort) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{title}</span>
+        <span className="text-xs text-gray-400" title={reason}>
+          {reason}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting()}
+      className="h-auto p-0 font-medium justify-start hover:bg-transparent"
+    >
+      {title}
+      {column.getIsSorted() === "asc" ? (
+        <ArrowUp className="ml-2 h-4 w-4" />
+      ) : column.getIsSorted() === "desc" ? (
+        <ArrowDown className="ml-2 h-4 w-4" />
+      ) : (
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      )}
+    </Button>
+  )
+}
+
 // Sub-columns for nested table (parts)
 export const subColumns: (ColumnDef<Part> & {
   filterType?: "text" | "select" | "multi-select" | "range" | "date-range" | "none"
@@ -63,7 +99,13 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "modelName",
-    header: "Model Name",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Model Name" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }) => <div className="font-mono text-sm">{row.original?.modelName || 'N/A'}</div>,
     size: 200,
     minSize: 150,
@@ -73,7 +115,13 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "volume",
-    header: "Volume (cm³)",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Volume (cm³)" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }) => {
       const volume = row.original?.volume ? parseFloat(row.original.volume.toString()) : 0
       return <div className="font-medium">{volume.toFixed(2)}</div>
@@ -87,7 +135,14 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "boundingBox",
-    header: "Bounding Box",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Bounding Box" 
+        canSort={false} 
+        reason="Complex object"
+      />
+    ),
     cell: ({ row }) => {
       const box = row.original?.boundingBox
       if (!box) return <div>N/A</div>
@@ -105,7 +160,13 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "quantity",
-    header: "Quantity",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Quantity" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }) => <div className="font-medium">{row.original?.quantity || 0}</div>,
     size: 180,
     minSize: 150,
@@ -116,7 +177,13 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "shippingDeadline",
-    header: "Shipping Deadline",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Shipping Deadline" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }) => {
       const dateValue = row.original?.shippingDeadline
       if (!dateValue) return <div className="text-gray-400 text-sm">No date</div>
@@ -202,10 +269,16 @@ export const columns: any[] = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting()}
         >
           Project ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       )
     },
@@ -224,10 +297,16 @@ export const columns: any[] = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting()}
         >
           Customer Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       )
     },
@@ -244,10 +323,16 @@ export const columns: any[] = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting()}
         >
           Customer Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       )
     },
@@ -260,7 +345,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "grossPrice",
-    header: () => <div className="text-left">Gross Price</div>,
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Gross Price" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const amount = parseFloat(row.getValue("grossPrice"))
       const formatted = new Intl.NumberFormat("en-US", {
@@ -279,7 +370,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "netPrice",
-    header: () => <div className="text-left">Net Price</div>,
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Net Price" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const amount = parseFloat(row.getValue("netPrice"))
       const formatted = new Intl.NumberFormat("en-US", {
@@ -298,7 +395,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "deliveryMethod",
-    header: "Delivery Method",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Delivery Method" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const method = row.getValue("deliveryMethod") as string
       const colorClass = {
@@ -328,7 +431,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "paymentMethod",
-    header: "Payment Method",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Payment Method" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const method = row.getValue("paymentMethod") as string
       return (
@@ -352,7 +461,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "ticketStatus",
-    header: "Ticket Status",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Ticket Status" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const status = row.getValue("ticketStatus") as string
       const colorClass = {
@@ -387,7 +502,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Created",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Created" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const dateValue = row.getValue("createdAt") as string | undefined
       if (!dateValue) {
@@ -405,7 +526,13 @@ export const columns: any[] = [
   },
   {
     accessorKey: "dueDate",
-    header: "Due Date",
+    header: ({ column }: { column: any }) => (
+      <SortableHeader 
+        column={column} 
+        title="Due Date" 
+        canSort={true} 
+      />
+    ),
     cell: ({ row }: { row: any }) => {
       const dateValue = row.getValue("dueDate") as string | undefined
       if (!dateValue) {
