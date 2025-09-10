@@ -139,7 +139,11 @@ const data: Payment[] = [
 ]
 
 // Sub-columns for nested table
-export const subColumns: ColumnDef<SubPayment>[] = [
+export const subColumns: (ColumnDef<SubPayment> & {
+  filterType?: "text" | "select" | "multi-select" | "range" | "date-range" | "none"
+  filterOptions?: { value: string; label: string }[]
+  filterFn?: string
+})[] = [
   {
     accessorKey: "description",
     header: "Description",
@@ -147,6 +151,7 @@ export const subColumns: ColumnDef<SubPayment>[] = [
     size: 200,
     minSize: 200,
     maxSize: 200,
+    filterType: "text",
   },
   {
     accessorKey: "amount",
@@ -162,6 +167,8 @@ export const subColumns: ColumnDef<SubPayment>[] = [
     size: 200,
     minSize: 200,
     maxSize: 200,
+    filterType: "range",
+    filterFn: "range" as any,
   },
   {
     accessorKey: "date",
@@ -170,6 +177,8 @@ export const subColumns: ColumnDef<SubPayment>[] = [
     size: 200,
     minSize: 200,
     maxSize: 200,
+    filterType: "date-range",
+    filterFn: "dateRange" as any,
   },
   {
     accessorKey: "category",
@@ -180,6 +189,17 @@ export const subColumns: ColumnDef<SubPayment>[] = [
     size: 200,
     minSize: 200,
     maxSize: 200,
+    filterType: "select",
+    filterOptions: [
+      { value: "Service", label: "Service" },
+      { value: "Fee", label: "Fee" },
+      { value: "Tax", label: "Tax" },
+      { value: "Subscription", label: "Subscription" },
+      { value: "Setup", label: "Setup" },
+      { value: "Plan", label: "Plan" },
+      { value: "Add-on", label: "Add-on" },
+      { value: "Support", label: "Support" },
+    ],
   },
 ]
 
@@ -206,9 +226,9 @@ export const columns: any[] = [
     enableSorting: false,
     enableHiding: false,
     enableResizing: true,
-    size: 500,
-    minSize: 100,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
     filterType: "none",
   },
   {
@@ -224,9 +244,9 @@ export const columns: any[] = [
       { value: "success", label: "Success" },
       { value: "failed", label: "Failed" },
     ],
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "email",
@@ -243,9 +263,9 @@ export const columns: any[] = [
     },
     cell: ({ row }: { row: any }) => <div className="lowercase">{row.getValue("email")}</div>,
     filterType: "text",
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "amount",
@@ -261,9 +281,9 @@ export const columns: any[] = [
     },
     filterType: "range",
     filterFn: "range" as any,
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "category",
@@ -278,9 +298,9 @@ export const columns: any[] = [
       { value: "refund", label: "Refund" },
       { value: "fee", label: "Fee" },
     ],
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "priority",
@@ -311,9 +331,9 @@ export const columns: any[] = [
       { value: "high", label: "High" },
       { value: "urgent", label: "Urgent" },
     ],
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "tags",
@@ -352,9 +372,9 @@ export const columns: any[] = [
       { value: "trial", label: "Trial" },
       { value: "conversion", label: "Conversion" },
     ],
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "createdAt",
@@ -369,9 +389,9 @@ export const columns: any[] = [
     },
     filterType: "date-range",
     filterFn: "dateRange" as any,
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     accessorKey: "dueDate",
@@ -386,9 +406,9 @@ export const columns: any[] = [
     },
     filterType: "date-range",
     filterFn: "dateRange" as any,
-    size: 500,
-    minSize: 200,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
   {
     id: "actions",
@@ -420,9 +440,9 @@ export const columns: any[] = [
       )
     },
     filterType: "none",
-    size: 500,
-    minSize: 100,
-    maxSize: 800,
+    size: 300,
+    minSize: 300,
+    maxSize: 300,
   },
 ]
 
@@ -469,10 +489,21 @@ export default function MyTable() {
         columns={columns} 
         data={data} 
         getSubRows={(row) => row.subPayments}
-        subColumns={subColumns}
+        renderSubComponent={({ row }) => (
+          <div className="w-fit">
+            <DataTable
+              columns={subColumns}
+              data={(row.original?.subPayments as SubPayment[] | undefined) ?? []}
+              showToolbar={false}
+              showPagination={false}
+              enableColumnSearch={true}
+              filterColumn="description"
+              filterPlaceholder="Filter sub-payments..."
+            />
+          </div>
+        )}
         filterColumn="email"
         filterPlaceholder="Filter by email..."
-        enableSubTableSorting={true}
         enableColumnSearch={true}
       />
     </div>
