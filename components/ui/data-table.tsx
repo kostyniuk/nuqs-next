@@ -16,7 +16,7 @@ import {
   ExpandedState,
   ColumnResizeMode,
 } from "@tanstack/react-table"
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDownIcon, ArrowUp, ArrowDown } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDownIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -38,135 +38,6 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
-// Sortable Sub-Table Component
-function SortableSubTable({ 
-  subRows, 
-  subColumns, 
-  rowId, 
-  sorting, 
-  onSortingChange,
-  enableSorting = false
-}: { 
-  subRows: any[], 
-  subColumns: ColumnDef<any, any>[], 
-  rowId: string,
-  sorting: { column: string; direction: 'asc' | 'desc' } | null,
-  onSortingChange: (column: string, direction: 'asc' | 'desc') => void,
-  enableSorting?: boolean
-}) {
-  const handleSort = (columnKey: string) => {
-    if (!sorting || sorting.column !== columnKey) {
-      onSortingChange(columnKey, 'asc')
-    } else if (sorting.direction === 'asc') {
-      onSortingChange(columnKey, 'desc')
-    } else {
-      onSortingChange(columnKey, 'asc')
-    }
-  }
-
-  const sortedSubRows = React.useMemo(() => {
-    if (!sorting) return subRows
-    
-    return [...subRows].sort((a, b) => {
-      const aValue = a[sorting.column]
-      const bValue = b[sorting.column]
-      
-      if (aValue === bValue) return 0
-      
-      let comparison = 0
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        comparison = aValue.localeCompare(bValue)
-      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
-        comparison = aValue - bValue
-      } else {
-        comparison = String(aValue).localeCompare(String(bValue))
-      }
-      
-      return sorting.direction === 'asc' ? comparison : -comparison
-    })
-  }, [subRows, sorting])
-
-  return (
-    <div className="w-full">
-      <Table className="w-full table-fixed">
-        <TableHeader>
-          <TableRow>
-            {subColumns.map((column, index) => {
-              const columnSize = (column as any).size || 200
-              
-              return (
-                <TableHead 
-                  key={index} 
-                  className="h-10 px-2 text-left align-middle font-medium"
-                  style={{ width: `${columnSize}px` }}
-                >
-                {enableSorting && 'accessorKey' in column && column.accessorKey ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort(column.accessorKey as string)}
-                    className="h-8 px-2 font-medium hover:bg-transparent"
-                  >
-                    {typeof column.header === 'string' ? column.header : 
-                     typeof column.header === 'function' ? 
-                     column.header({ column: { id: index.toString() } } as any) : 
-                     column.header}
-                    {sorting && sorting.column === column.accessorKey && (
-                      sorting.direction === 'asc' ? 
-                        <ArrowUp className="ml-2 h-4 w-4" /> : 
-                        <ArrowDown className="ml-2 h-4 w-4" />
-                    )}
-                  </Button>
-                ) : (
-                  typeof column.header === 'string' ? column.header : 
-                  typeof column.header === 'function' ? 
-                  column.header({ column: { id: index.toString() } } as any) : 
-                  column.header
-                )}
-                </TableHead>
-              )
-            })}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedSubRows.length > 0 ? (
-            sortedSubRows.map((subRow: any, subIndex: number) => (
-              <TableRow key={subIndex} className="hover:bg-muted/50 border-b transition-colors">
-                {subColumns.map((column, colIndex) => {
-                  const columnSize = (column as any).size || 200
-                  
-                  return (
-                    <TableCell 
-                      key={colIndex} 
-                      className="p-2 align-middle text-left"
-                      style={{ width: `${columnSize}px` }}
-                    >
-                    {typeof column.cell === 'string' ? column.cell :
-                     typeof column.cell === 'function' ?
-                     column.cell({ 
-                       row: { 
-                         original: subRow, 
-                         getValue: (key: string) => subRow[key] 
-                       } 
-                     } as any) :
-                     column.cell}
-                    </TableCell>
-                  )
-                })}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={subColumns.length} className="text-center text-muted-foreground py-4">
-                No sub-data available
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  )
-}
 
 // Helper function to add expand functionality to columns
 export function addExpandColumn<TData>(
@@ -230,9 +101,7 @@ interface DataTableProps<TData, TValue> {
   filterColumn?: string
   filterPlaceholder?: string
   getSubRows?: (row: TData) => any[] | undefined
-  subColumns?: ColumnDef<any, any>[]
   renderSubComponent?: (props: { row: any }) => React.ReactElement
-  enableSubTableSorting?: boolean
   enableColumnSearch?: boolean
   showToolbar?: boolean
   showPagination?: boolean
@@ -531,9 +400,7 @@ export function DataTable<TData, TValue>({
   filterColumn = "email",
   filterPlaceholder = "Filter invoices...",
   getSubRows,
-  subColumns,
   renderSubComponent,
-  enableSubTableSorting = false,
   enableColumnSearch = false,
   showToolbar = true,
   showPagination = true,
@@ -543,7 +410,6 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
-  const [subTableSorting, setSubTableSorting] = React.useState<{ [rowId: string]: { column: string; direction: 'asc' | 'desc' } }>({})
   const [columnSizing, setColumnSizing] = React.useState({})
 
   // Add expand column if getSubRows or renderSubComponent is provided
@@ -728,84 +594,6 @@ export function DataTable<TData, TValue>({
                          <div className="ml-12">
                            {renderSubComponent ? (
                              renderSubComponent({ row })
-                           ) : subColumns ? (
-                             <div className="w-full">
-                               {enableSubTableSorting ? (
-                                 <SortableSubTable
-                                   subRows={getSubRows ? getSubRows(row.original) || [] : []}
-                                   subColumns={subColumns}
-                                   rowId={row.id}
-                                   sorting={subTableSorting[row.id] || null}
-                                   onSortingChange={(column, direction) => {
-                                     setSubTableSorting(prev => ({
-                                       ...prev,
-                                       [row.id]: { column, direction }
-                                     }))
-                                   }}
-                                   enableSorting={true}
-                                 />
-                               ) : (
-                                 <Table className="w-full table-fixed">
-                                   <TableHeader>
-                                     <TableRow>
-                                       {subColumns.map((column, index) => {
-                                         const columnSize = (column as any).size || 200
-                                         
-                                         return (
-                                           <TableHead 
-                                             key={index} 
-                                             className="h-10 px-2 text-left align-middle font-medium"
-                                             style={{ width: `${columnSize}px` }}
-                                           >
-                                           {typeof column.header === 'string' ? column.header : 
-                                            typeof column.header === 'function' ? 
-                                            column.header({ column: { id: index.toString() } } as any) : 
-                                            column.header}
-                                         </TableHead>
-                                         )
-                                       })}
-                                     </TableRow>
-                                   </TableHeader>
-                                   <TableBody>
-                                     {(() => {
-                                       // Get sub-rows using the getSubRows function
-                                       const subRows = getSubRows ? getSubRows(row.original) : []
-                                       return subRows && subRows.length > 0 ? subRows.map((subRow: any, subIndex: number) => (
-                                       <TableRow key={subIndex} className="hover:bg-muted/50 border-b transition-colors">
-                                         {subColumns.map((column, colIndex) => {
-                                           const columnSize = (column as any).size || 200
-                                           
-                                           return (
-                                             <TableCell 
-                                               key={colIndex} 
-                                               className="p-2 align-middle text-left"
-                                               style={{ width: `${columnSize}px` }}
-                                             >
-                                             {typeof column.cell === 'string' ? column.cell :
-                                              typeof column.cell === 'function' ?
-                                              column.cell({ 
-                                                row: { 
-                                                  original: subRow, 
-                                                  getValue: (key: string) => subRow[key] 
-                                                } 
-                                              } as any) :
-                                              column.cell}
-                                             </TableCell>
-                                           )
-                                         })}
-                                       </TableRow>
-                                     )) : (
-                                       <TableRow>
-                                         <TableCell colSpan={subColumns.length} className="text-center text-muted-foreground py-4">
-                                           No sub-data available
-                                         </TableCell>
-                                       </TableRow>
-                                     )
-                                     })()}
-                                   </TableBody>
-                                 </Table>
-                               )}
-                             </div>
                            ) : (
                              <div>No sub-content available</div>
                            )}
