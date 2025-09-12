@@ -25,6 +25,7 @@ export type Part = {
   }
   shippingDeadline: string
   quantity: number
+  stlImageUrl?: string
 }
 
 // Project statuses with realistic distribution
@@ -42,6 +43,22 @@ const modelNamePrefixes = [
 const modelNameSuffixes = [
   '1mm', '2mm', '5mm', '10mm', '20mm', '50mm', '100mm', '200mm',
   'v1', 'v2', 'v3', 'final', 'draft', 'prototype', 'production'
+]
+
+// STL 2D image placeholders - using Picsum Photos for beautiful random images
+const stlImageUrls = [
+  'https://picsum.photos/80/60?random=1',
+  'https://picsum.photos/80/60?random=2',
+  'https://picsum.photos/80/60?random=3',
+  'https://picsum.photos/80/60?random=4',
+  'https://picsum.photos/80/60?random=5',
+  'https://picsum.photos/80/60?random=6',
+  'https://picsum.photos/80/60?random=7',
+  'https://picsum.photos/80/60?random=8',
+  'https://picsum.photos/80/60?random=9',
+  'https://picsum.photos/80/60?random=10',
+  'https://picsum.photos/80/60?random=11',
+  'https://picsum.photos/80/60?random=12'
 ]
 
 function generateParts(projectId: string): Part[] {
@@ -63,7 +80,8 @@ function generateParts(projectId: string): Part[] {
         depth: faker.number.float({ min: 1, max: 500, fractionDigits: 1 })
       },
       shippingDeadline: faker.date.future({ years: 1 }).toISOString().split('T')[0],
-      quantity: faker.number.int({ min: 1, max: 50 })
+      quantity: faker.number.int({ min: 1, max: 50 }),
+      stlImageUrl: faker.helpers.arrayElement(stlImageUrls)
     })
   }
   

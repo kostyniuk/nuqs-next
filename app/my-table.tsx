@@ -98,6 +98,36 @@ export const subColumns: (ColumnDef<Part> & {
     filterType: "none",
   },
   {
+    accessorKey: "stlImage",
+    header: "STL Preview",
+    cell: ({ row }) => {
+      const imageUrl = row.original?.stlImageUrl
+      if (!imageUrl) return <div className="text-gray-400 text-sm">No image</div>
+      
+      return (
+        <div className="flex items-center justify-center">
+          <img 
+            src={imageUrl} 
+            alt="STL Preview" 
+            className="w-16 h-12 object-cover rounded border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none'
+              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+            }}
+          />
+          <div className="hidden w-16 h-12 bg-gray-100 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+            No Image
+          </div>
+        </div>
+      )
+    },
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    enableResizing: true,
+    filterType: "none",
+  },
+  {
     accessorKey: "modelName",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
@@ -283,6 +313,46 @@ export const columns: any[] = [
     minSize: 120,
     maxSize: 200,
     enableResizing: true,
+  },
+  {
+    accessorKey: "projectPreview",
+    header: "Project Preview",
+    cell: ({ row }: { row: any }) => {
+      const parts = row.original?.parts as Part[] | undefined
+      const firstPartImage = parts?.[0]?.stlImageUrl
+      
+      if (!firstPartImage) {
+        return (
+          <div className="flex items-center justify-center">
+            <div className="w-16 h-12 bg-gray-100 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+              No Image
+            </div>
+          </div>
+        )
+      }
+      
+      return (
+        <div className="flex items-center justify-center">
+          <img 
+            src={firstPartImage} 
+            alt="Project Preview" 
+            className="w-16 h-12 object-cover rounded border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none'
+              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+            }}
+          />
+          <div className="hidden w-16 h-12 bg-gray-100 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+            No Image
+          </div>
+        </div>
+      )
+    },
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    enableResizing: true,
+    filterType: "none",
   },
   {
     accessorKey: "customerName",
