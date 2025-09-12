@@ -39,7 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { cn, exportToExcel } from "@/lib/utils"
 
 // Drag and drop item types
 const COLUMN_DRAG_TYPE = "column"
@@ -335,6 +335,7 @@ const MultiSelectFilter = ({ column, options }: { column: any; options: FilterOp
     column.setFilterValue(undefined)
   }
 
+
   return (
     <div className="w-full">
       {selectedValues.length > 0 && (
@@ -552,6 +553,7 @@ export function DataTable<TData, TValue>({
     columns.map((_, index) => index.toString())
   )
 
+
   // Add expand column if getSubRows or renderSubComponent is provided
   const columnsWithExpand = (getSubRows || renderSubComponent) ? addExpandColumn(columns, data, getSubRows, renderSubComponent) : columns
 
@@ -640,6 +642,9 @@ export function DataTable<TData, TValue>({
       columnSizing,
     },
   })
+
+
+  console.log(table.getAllLeafColumns().map(column => column.id))
 
   // Get the filter column, fallback to first available column if specified column doesn't exist
   const filterColumnRef = table.getColumn(filterColumn) || table.getAllColumns().find(col => col.getCanFilter())
@@ -880,6 +885,7 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
+      <Button onClick={() => exportToExcel(table.getRowModel().rows, table.getAllLeafColumns().map(col => col.columnDef), table.getState().columnSizing)}>Export to Excel</Button>
     </div>
   )
 
