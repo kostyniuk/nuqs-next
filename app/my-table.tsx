@@ -7,6 +7,7 @@ type ExtendedColumnDef<TData, TValue> = ColumnDef<TData, TValue> & {
   filterType?: "text" | "select" | "multi-select" | "range" | "date-range" | "none"
   filterOptions?: { value: string; label: string }[]
   filterFn?: string
+  exportName?: string
 }
 import { ArrowUpDown, MoreHorizontal, ChevronRight, ChevronDown, ArrowUp, ArrowDown } from "lucide-react"
 import React, { useState } from "react"
@@ -69,6 +70,7 @@ export const subColumns: (ColumnDef<Part> & {
   filterType?: "text" | "select" | "multi-select" | "range" | "date-range" | "none"
   filterOptions?: { value: string; label: string }[]
   filterFn?: string
+  exportName?: string
 })[] = [
   {
     id: "select",
@@ -129,6 +131,7 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "modelName",
+    exportName: "Model Name",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -145,6 +148,7 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "volume",
+    exportName: "Volume (cm³)",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -165,6 +169,7 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "boundingBox",
+    exportName: "Bounding Box",
     header: "Bounding Box",
     cell: ({ row }) => {
       const box = row.original?.boundingBox
@@ -183,6 +188,7 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "quantity",
+    exportName: "Quantity",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -200,6 +206,7 @@ export const subColumns: (ColumnDef<Part> & {
   },
   {
     accessorKey: "shippingDeadline",
+    exportName: "Shipping Deadline",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -288,6 +295,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "id",
+    exportName: "Project ID",
     header: ({ column }: { column: any }) => {
       return (
         <Button
@@ -356,6 +364,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "customerName",
+    exportName: "Customer Name",
     header: ({ column }: { column: any }) => {
       return (
         <Button
@@ -382,6 +391,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "customerEmail",
+    exportName: "Customer Email",
     header: ({ column }: { column: any }) => {
       return (
         <Button
@@ -408,6 +418,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "grossPrice",
+    exportName: "Gross Price",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -433,6 +444,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "netPrice",
+    exportName: "Net Price",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -458,6 +470,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "deliveryMethod",
+    exportName: "Delivery Method",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -494,6 +507,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "paymentMethod",
+    exportName: "Payment Method",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -524,6 +538,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "ticketStatus",
+    exportName: "Ticket Status",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -565,6 +580,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "createdAt",
+    exportName: "Created",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 
@@ -589,6 +605,7 @@ export const columns: any[] = [
   },
   {
     accessorKey: "dueDate",
+    exportName: "Due Date",
     header: ({ column }: { column: any }) => (
       <SortableHeader 
         column={column} 

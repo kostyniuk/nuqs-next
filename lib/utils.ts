@@ -6,22 +6,34 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const exportToExcel = (
+  rows: any[], 
+  columns: any[], 
+  columnSizing?: Record<string, number>
+) => {
+  const exportableColumns = columns.filter(col => col.exportName);
 
-export const exportToExcel = (rows: any[], columns: any[], columnSizing?: Record<string, number>) => {
+  
   const data = rows.map((row) =>
-    columns.map((col) => row.original[col.accessorKey] || "")
+    exportableColumns.map((col) => {
+      // Handle different column types
+      if (col.accessorKey) {
+        return row.original[col.accessorKey] || "";
+      } else if (col.id) {
+        return "";
+      }
+      return "";
+    })
   );
 
-  const header = columns.map((col) => {
-    console.log(col)
-    return col.accessorKey;
-  });
+  const header = exportableColumns.map((col) => col.exportName);
   const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
 
   // Set column widths based on table column sizes
   if (columnSizing) {
-    const colWidths = columns.map((col) => {
-      const size = columnSizing[col.accessorKey] || col.size || 150;
+    const colWidths = exportableColumns.map((col) => {
+      const columnKey = col.accessorKey || col.id;
+      const size = columnSizing[columnKey] || col.size || 150;
       // Convert pixels to Excel column width (approximate conversion)
       return { wch: Math.max(size / 8, 10) };
     });
